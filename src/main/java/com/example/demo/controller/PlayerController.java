@@ -6,8 +6,6 @@ import com.example.demo.controller.request.GetPlayersListRequest;
 import com.example.demo.controller.request.UpdatePlayerRequest;
 import com.example.demo.controller.response.*;
 import com.example.demo.entity.Player;
-import com.example.demo.entity.Profession;
-import com.example.demo.entity.Race;
 import com.example.demo.mapper.PlayerMapper;
 import com.example.demo.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;

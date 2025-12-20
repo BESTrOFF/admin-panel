@@ -4,12 +4,10 @@ import com.example.demo.controller.request.CreatePlayerRequest;
 import com.example.demo.controller.request.GetPlayersCountRequest;
 import com.example.demo.controller.request.UpdatePlayerRequest;
 import com.example.demo.entity.Player;
-import com.example.demo.entity.Race;
 import com.example.demo.mapper.PlayerMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.PostConstruct;
 import java.sql.Timestamp;
