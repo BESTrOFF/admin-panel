@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 @Builder
 public class GetPlayersListResponse {
+    private Long id;
     private String name;
     private String title;
     private Race race;

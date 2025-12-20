@@ -3,117 +3,71 @@ package com.example.demo.controller;
 import com.example.demo.controller.request.CreatePlayerRequest;
 import com.example.demo.controller.request.GetPlayersCountRequest;
 import com.example.demo.controller.request.GetPlayersListRequest;
+import com.example.demo.controller.request.UpdatePlayerRequest;
 import com.example.demo.controller.response.*;
+import com.example.demo.entity.Player;
 import com.example.demo.entity.Profession;
 import com.example.demo.entity.Race;
+import com.example.demo.mapper.PlayerMapper;
+import com.example.demo.repository.PlayerRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 
+import java.util.List;
+@RequiredArgsConstructor
 @RestController
 public class PlayerController {
+    private final PlayerRepository playerRepository;
 
     @GetMapping("/rest/players")
     public List<GetPlayersListResponse> getPlayers(GetPlayersListRequest request) {
-        List<GetPlayersListResponse> players = new ArrayList<>();
+        int pageNumber = request.getPageNumber() == null ? 0 : request.getPageNumber();
+        int pageSize = request.getPageSize() == null ? 10 : request.getPageSize();
 
-        GetPlayersListResponse request1 = GetPlayersListResponse.builder()
-                .name("qwe")
-                .title("qwe")
-                .race(Race.ELF)
-                .profession(Profession.CLERIC)
-                .birthday(123L)
-                .banned(false)
-                .experience(123)
-                .level(42)
-                .untilNextLevel(12)
-                .build();
-
-        GetPlayersListResponse request2 = GetPlayersListResponse.builder()
-                .name("asd")
-                .title("asd")
-                .race(Race.HUMAN)
-                .profession(Profession.SORCERER)
-                .birthday(123L)
-                .banned(false)
-                .experience(123)
-                .level(42)
-                .untilNextLevel(12)
-                .build();
-
-
-        return List.of(request1, request2);
+        return playerRepository.getAll(pageNumber, pageSize).stream()
+                .map(PlayerMapper::toGetPlayersListResponse)
+                .toList();
     }
 
     @GetMapping("rest/players/{id}")
     public ResponseEntity<GetPlayerResponse> getPlayer(@PathVariable Long id) {
-        GetPlayerResponse response = GetPlayerResponse.builder()
-                .id(12L)
-                .name("name")
-                .title("title")
-                .race(Race.ELF)
-                .profession(Profession.CLERIC)
-                .birthday(123L)
-                .banned(false)
-                .experience(123)
-                .level(42)
-                .untilNextLevel(12)
-                .build();
+        Player player = playerRepository.getById(id);
+
+        GetPlayerResponse response = PlayerMapper.toGetPlayerResponse(player);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("rest/players/count")
     public Integer getPlayersCount(GetPlayersCountRequest request) {
-        GetPlayersCountResponse response = new GetPlayersCountResponse();
-
-        response.setCount(4);
-
-        return response.getCount();
+         return  playerRepository.getPlayersCount(request);
     }
 
     @PostMapping("rest/players")
-    public ResponseEntity<CreatePlayerResponse> createPlayer(CreatePlayerRequest request) {
-        CreatePlayerResponse response = CreatePlayerResponse.builder()
-                .id(13L)
-                .name("player")
-                .title("title")
-                .race(Race.HUMAN)
-                .profession(Profession.PALADIN)
-                .birthday(4563L)
-                .banned(false)
-                .experience(321)
-                .level(54)
-                .untilNextLevel(126)
-                .build();
+    public ResponseEntity<CreatePlayerResponse> createPlayer(@RequestBody CreatePlayerRequest request) {
+        Player createdPlayer = playerRepository.createPlayer(request);
+
+        CreatePlayerResponse response = PlayerMapper.toCreatePlayerResponse(createdPlayer);
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/rest/players/{id}")
     public ResponseEntity<UpdatePlayerResponse> updatePlayer(@PathVariable Long id,
-                                                             CreatePlayerRequest request) {
+                                                             @RequestBody UpdatePlayerRequest request) {
 
-        UpdatePlayerResponse response = UpdatePlayerResponse.builder()
-                .id(13L)
-                .name("player1")
-                .title("title1")
-                .race(Race.GIANT)
-                .profession(Profession.SORCERER)
-                .birthday(123L)
-                .banned(false)
-                .experience(123)
-                .level(54)
-                .untilNextLevel(126)
-                .build();
+        Player updatedPlayer = playerRepository.updatePlayer(id, request);
+
+        UpdatePlayerResponse response = PlayerMapper.toUpdatePlayerResponse(updatedPlayer);
 
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/rest/players/{id}")
     public ResponseEntity<Void> deletePlayer(@PathVariable Long id) {
+        playerRepository.deletePlayer(id);
 
         return ResponseEntity.ok().build();
     }
