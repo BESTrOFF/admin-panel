@@ -5,7 +5,7 @@ import com.example.demo.entity.Race;
 import lombok.Value;
 
 @Value
-public class CreatePlayerRequest {
+public class CreatePlayerRequest implements Request {
     String name;
     String title;
     Race race;

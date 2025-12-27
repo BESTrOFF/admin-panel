@@ -1,17 +1,13 @@
 package com.example.demo.repository;
 
-import com.example.demo.controller.request.CreatePlayerRequest;
-import com.example.demo.controller.request.GetPlayersCountRequest;
-import com.example.demo.controller.request.UpdatePlayerRequest;
+import com.example.demo.controller.request.*;
 import com.example.demo.entity.Player;
 import com.example.demo.mapper.PlayerMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.PostConstruct;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,34 +19,90 @@ public class PlayerRepository {
     private final RaceRepository raceRepository;
     private final ProfessionRepository professionRepository;
 
-    @PostConstruct
-    public void init(){
+    public List<Player> getAll(GetPlayersListRequest request, int page, int pageSize) {
+        StringBuilder sql = new StringBuilder("""
+                                SELECT
+                                    player.id,
+                                    player.name,
+                                    player.title,
+                                    race.name AS race,
+                                    profession.name AS profession,
+                                    player.experience,
+                                    player.level,
+                                    player.until_next_level,
+                                    player.birthday,
+                                    player.banned
+                                FROM players player
+                                JOIN races race ON player.race_id = race.id
+                                JOIN professions profession ON player.profession_id = profession.id
+                                WHERE 1=1
+                                
+                                """);
 
-    }
+        List<Object> args = new ArrayList<>();
 
-    public List<Player> getAll(int page, int pageSize) {
-        int offset = (page) * pageSize;
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            sql.append(" AND player.name LIKE ?");
+            args.add("%" + request.getName().trim() + "%");
+        }
 
-        String sql = """
-                SELECT
-                    player.id,
-                    player.name,
-                    player.title,
-                    race.name AS race,
-                    profession.name AS profession,
-                    player.experience,
-                    player.level,
-                    player.until_next_level,
-                    player.birthday,
-                    player.banned
-                FROM players player
-                JOIN races race ON player.race_id = race.id
-                JOIN professions profession ON player.profession_id = profession.id
-                ORDER BY player.id
-                LIMIT ? OFFSET ?
-                """;
+        if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
+            sql.append(" AND player.title LIKE ?");
+            args.add("%" + request.getTitle().trim() + "%");
+        }
 
-        return template.query(sql, playerMapper, pageSize, offset);
+        if (request.getRace() != null) {
+            sql.append(" AND player.race_id = ?");
+            args.add(raceRepository.getRaceId(request.getRace()));
+        }
+
+        if (request.getProfession() != null) {
+            sql.append(" AND player.profession_id = ?");
+            args.add(professionRepository.getProfessionId(request.getProfession()));
+        }
+
+        if (request.getAfter() != null) {
+            sql.append(" AND player.birthday >= ?");
+            args.add(new java.sql.Timestamp(request.getAfter()));
+        }
+
+        if (request.getBefore() != null) {
+            sql.append(" AND player.birthday <= ?");
+            args.add(new java.sql.Timestamp(request.getBefore()));
+        }
+
+        if (request.getBanned() != null) {
+            sql.append(" AND player.banned = ?");
+            args.add(request.getBanned());
+        }
+
+        if (request.getMinExperience() != null) {
+            sql.append(" AND player.experience >= ?");
+            args.add(request.getMinExperience());
+        }
+
+        if (request.getMaxExperience() != null) {
+            sql.append(" AND player.experience <= ?");
+            args.add(request.getMaxExperience());
+        }
+
+        if (request.getMinLevel() != null) {
+            sql.append(" AND player.level >= ?");
+            args.add(request.getMinLevel());
+        }
+
+        if (request.getMaxLevel() != null) {
+            sql.append(" AND player.level <= ?");
+            args.add(request.getMaxLevel());
+        }
+
+        sql.append(" ORDER BY player.id LIMIT ? OFFSET ?");
+
+        int offset = page * pageSize;
+        args.add(pageSize);
+        args.add(offset);
+
+        return template.query(sql.toString(), args.toArray(), playerMapper);
     }
 
     public Player getById(Long id) {
@@ -76,80 +128,67 @@ public class PlayerRepository {
     }
 
     public Integer getPlayersCount(GetPlayersCountRequest request) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM players WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM players player WHERE 1=1");
         List<Object> args = new ArrayList<>();
-        List<Integer> types = new ArrayList<>();
 
         if (request.getName() != null && !request.getName().trim().isEmpty()) {
-            sql.append(" AND name ILIKE ?");
+            sql.append(" AND player.name LIKE ?");
             args.add("%" + request.getName().trim() + "%");
-            types.add(Types.VARCHAR);
         }
 
         if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
-            sql.append(" AND title ILIKE ?");
+            sql.append(" AND player.title LIKE ?");
             args.add("%" + request.getTitle().trim() + "%");
-            types.add(Types.VARCHAR);
         }
 
         if (request.getRace() != null) {
-            sql.append(" AND race_id = ?");
+            sql.append(" AND player.race_id = ?");
             args.add(raceRepository.getRaceId(request.getRace()));
-            types.add(Types.BIGINT);
         }
 
         if (request.getProfession() != null) {
-            sql.append(" AND profession_id = ?");
+            sql.append(" AND player.profession_id = ?");
             args.add(professionRepository.getProfessionId(request.getProfession()));
-            types.add(Types.BIGINT);
         }
 
         if (request.getAfter() != null) {
-            sql.append(" AND birthday >= ?");
+            sql.append(" AND player.birthday >= ?");
             args.add(new java.sql.Timestamp(request.getAfter()));
-            types.add(Types.TIMESTAMP);
         }
 
         if (request.getBefore() != null) {
-            sql.append(" AND birthday <= ?");
+            sql.append(" AND player.birthday <= ?");
             args.add(new java.sql.Timestamp(request.getBefore()));
-            types.add(Types.TIMESTAMP);
         }
 
         if (request.getBanned() != null) {
-            sql.append(" AND banned = ?");
+            sql.append(" AND player.banned = ?");
             args.add(request.getBanned());
-            types.add(Types.BOOLEAN);
         }
 
         if (request.getMinExperience() != null) {
-            sql.append(" AND experience >= ?");
+            sql.append(" AND player.experience >= ?");
             args.add(request.getMinExperience());
-            types.add(Types.INTEGER);
         }
 
         if (request.getMaxExperience() != null) {
-            sql.append(" AND experience <= ?");
+            sql.append(" AND player.experience <= ?");
             args.add(request.getMaxExperience());
-            types.add(Types.INTEGER);
         }
 
         if (request.getMinLevel() != null) {
-            sql.append(" AND level >= ?");
+            sql.append(" AND player.level >= ?");
             args.add(request.getMinLevel());
-            types.add(Types.INTEGER);
         }
 
         if (request.getMaxLevel() != null) {
-            sql.append(" AND level <= ?");
+            sql.append(" AND player.level <= ?");
             args.add(request.getMaxLevel());
-            types.add(Types.INTEGER);
         }
 
         return template.queryForObject(
                 sql.toString(),
                 args.toArray(),
-                types.stream().mapToInt(i -> i).toArray(),
                 Integer.class
         );
     }
@@ -185,49 +224,42 @@ public class PlayerRepository {
     public Player updatePlayer(Long id, UpdatePlayerRequest request) {
         StringBuilder sql = new StringBuilder("UPDATE players SET ");
         List<Object> args = new ArrayList<>();
-        List<Integer> types = new ArrayList<>();
 
         boolean hasUpdates = false;
 
         if (request.getName() != null) {
             sql.append("name = ?, ");
             args.add(request.getName());
-            types.add(Types.VARCHAR);
             hasUpdates = true;
         }
 
         if (request.getTitle() != null) {
             sql.append("title = ?, ");
             args.add(request.getTitle());
-            types.add(Types.VARCHAR);
             hasUpdates = true;
         }
 
         if (request.getRace() != null) {
             sql.append("race_id = ?, ");
             args.add(raceRepository.getRaceId(request.getRace()));
-            types.add(Types.BIGINT);
             hasUpdates = true;
         }
 
         if (request.getProfession() != null) {
             sql.append("profession_id = ?, ");
             args.add(professionRepository.getProfessionId(request.getProfession()));
-            types.add(Types.BIGINT);
             hasUpdates = true;
         }
 
         if (request.getBirthday() != null) {
             sql.append("birthday = ?, ");
             args.add(new Timestamp(request.getBirthday()));
-            types.add(Types.TIMESTAMP);
             hasUpdates = true;
         }
 
         if (request.getBanned() != null) {
             sql.append("banned = ?, ");
             args.add(request.getBanned());
-            types.add(Types.BOOLEAN);
             hasUpdates = true;
         }
 
@@ -242,10 +274,6 @@ public class PlayerRepository {
             args.add(level);
             args.add(untilNextLevel);
 
-            types.add(Types.INTEGER);
-            types.add(Types.INTEGER);
-            types.add(Types.INTEGER);
-
             hasUpdates = true;
         }
 
@@ -253,18 +281,12 @@ public class PlayerRepository {
 
         sql.append(" WHERE id = ?");
         args.add(id);
-        types.add(Types.BIGINT);
 
         if (!hasUpdates) {
             return getById(id);
         }
 
-        template.update(
-                sql.toString(),
-                args.toArray(),
-                types.stream().mapToInt(i -> i).toArray()
-        );
-
+        template.update(sql.toString(), args.toArray());
 
         return getById(id);
     }

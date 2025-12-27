@@ -6,7 +6,7 @@ import com.example.demo.filter.PlayerOrder;
 import lombok.Value;
 
 @Value
-public class GetPlayersListRequest {
+public class GetPlayersListRequest implements Request {
     String name;
     String title;
     Race race;
