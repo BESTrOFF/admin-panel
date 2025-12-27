@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create tables" author="bystrov">
+
+        <!-- Создание таблицы рас -->
+        <createTable tableName="races">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+
+            <column name="name" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <!-- Создание таблицы профессий -->
+        <createTable tableName="professions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+
+            <column name="name" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <!-- Создание таблицы игроков -->
+        <createTable tableName="players">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+
+            <column name="name" type="VARCHAR(12)">
+                <constraints nullable="false"/>
+            </column>
+
+
+            <column name="title" type="VARCHAR(30)"/>
+
+            <column name="race_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="player_race"
+                             referencedTableName="races" referencedColumnNames="id"/>
+            </column>
+
+            <column name="profession_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_player_profession"
+                             referencedTableName="professions" referencedColumnNames="id"/>
+            </column>
+
+            <column name="experience" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="until_next_level" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="birthday" type="TIMESTAMP"/>
+
+            <column name="banned" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="fill races and professions" author="bystrov">
+
+        <insert tableName="races">
+            <column name="name" value="HUMAN"/>
+        </insert>
+        <insert tableName="races">
+            <column name="name" value="DWARF"/>
+        </insert>
+        <insert tableName="races">
+            <column name="name" value="ELF"/>
+        </insert>
+        <insert tableName="races">
+            <column name="name" value="GIANT"/>
+        </insert>
+        <insert tableName="races">
+            <column name="name" value="ORC"/>
+        </insert>
+        <insert tableName="races">
+            <column name="name" value="TROLL"/>
+        </insert>
+        <insert tableName="races">
+            <column name="name" value="HOBBIT"/>
+        </insert>
+
+
+        <insert tableName="professions">
+            <column name="name" value="WARRIOR"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="ROGUE"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="SORCERER"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="CLERIC"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="PALADIN"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="NAZGUL"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="WARLOCK"/>
+        </insert>
+        <insert tableName="professions">
+            <column name="name" value="DRUID"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="fill players" author="bystrov">
+        <insert tableName="players">
+            <column name="name" value="Bystrov"/>
+            <column name="title" value="Great"/>
+            <column name="race_id" value="1"/>
+            <column name="profession_id" value="1"/>
+            <column name="experience" value="30"/>
+            <column name="level" value="20"/>
+            <column name="until_next_level" value="1"/>
+            <column name="birthday" value="1999-06-26"/>
+            <column name="banned" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
